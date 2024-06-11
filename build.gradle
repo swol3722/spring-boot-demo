@@ -1,0 +1,87 @@
+plugins {
+  id 'java'
+  id 'org.springframework.boot' version '3.3.0'
+  id 'io.spring.dependency-management' version '1.1.5'
+  id 'com.diffplug.spotless' version '6.25.0'
+  id "se.solrike.sonarlint" version "2.0.0"
+  id 'jacoco'
+  id "idea"
+}
+
+group = 'dev.wolffcode'
+version = '0.0.1-SNAPSHOT'
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+}
+
+configurations {
+  compileOnly {
+    extendsFrom annotationProcessor
+  }
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'org.springframework.boot:spring-boot-starter-actuator'
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  implementation 'org.springframework.boot:spring-boot-starter-validation'
+  implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+  implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+  compileOnly 'org.projectlombok:lombok'
+  annotationProcessor 'org.projectlombok:lombok'
+  annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+  annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+  runtimeOnly 'com.h2database:h2'
+  developmentOnly 'org.springframework.boot:spring-boot-devtools'
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+  testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+}
+
+project.ext {
+  sonarExcludeFile = [
+      "src/test/*",
+      "src/test-functional/*",
+      "src/test-integration/*",
+      "src/test-unit/*",
+      "**/exception/**",]
+}
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+    html.required = true
+  }
+  afterEvaluate {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+      fileTree(dir: it, exclude: sonarExcludeFile)
+    }))
+  }
+}
+
+spotless {
+  java {
+    googleJavaFormat()
+  }
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
+  finalizedBy jacocoTestReport
+}
+
+tasks.named("bootJar") {
+  archiveClassifier = 'boot'
+}
+
+tasks.named("jar") {
+  archiveClassifier = ''
+}
